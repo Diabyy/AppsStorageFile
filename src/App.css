@@ -1720,3 +1720,38 @@ button { font-family: var(--font); cursor: pointer; border: none; background: no
     background-color: transparent;
   }
 }
+
+/* ─────────────────────────────────────
+   DIRECTIONAL ARROW HOVER EFFECTS
+───────────────────────────────────── */
+.btn--has-arrow {
+  position: relative;
+}
+
+.btn__arrow {
+  display: inline-block;
+  transition: transform var(--transition);
+  margin-left: 6px;
+}
+
+/* Mulai Upload Sekarang -> Panah mengarah ke kanan */
+.btn--has-arrow:hover .btn__arrow:not(.btn__arrow--down) {
+  transform: translateX(6px);
+  animation: arrow-bounce-right 0.8s infinite alternate ease-in-out;
+}
+
+/* Lihat Fitur -> Panah mengarah ke bawah */
+.btn--has-arrow:hover .btn__arrow--down {
+  transform: translateY(6px);
+  animation: arrow-bounce-down 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes arrow-bounce-right {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(6px); }
+}
+
+@keyframes arrow-bounce-down {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(6px); }
+}

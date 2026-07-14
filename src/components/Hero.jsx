@@ -1,4 +1,4 @@
-export default function Hero({ user }) {
+export default function Hero({ user, onLinkClick }) {
   return (
     <section className="hero">
       <div className="hero__pattern" aria-hidden="true" />
@@ -12,10 +12,18 @@ export default function Hero({ user }) {
             Upload gambar JPG/PNG dan dokumen PDF ke cloud storage Supabase. Akses file kapan saja, dari mana saja, dengan aman dan terorganisir.
           </p>
           <div className="hero__cta-group">
-            <a href={user ? '#upload' : '#auth'} className="btn btn--teal btn--lg btn--has-arrow">
+            <a 
+              href={user ? '#upload' : '#auth'} 
+              className="btn btn--teal btn--lg btn--has-arrow"
+              onClick={(e) => onLinkClick?.(e, user ? '#upload' : '#auth')}
+            >
               Mulai Upload Sekarang <span className="btn__arrow">→</span>
             </a>
-            <a href="#features" className="btn btn--ghost btn--lg btn--has-arrow">
+            <a 
+              href="#features" 
+              className="btn btn--ghost btn--lg btn--has-arrow"
+              onClick={(e) => onLinkClick?.(e, '#features')}
+            >
               Lihat Fitur <span className="btn__arrow btn__arrow--down">↓</span>
             </a>
           </div>

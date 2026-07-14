@@ -7,7 +7,7 @@ const navLinks = [
   { label: 'Upload', href: '#upload' },
 ]
 
-export default function Navbar({ activeUsers, realtimeStatus, user, onSignOut }) {
+export default function Navbar({ activeUsers, realtimeStatus, user, onSignOut, onLinkClick }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
@@ -21,7 +21,15 @@ export default function Navbar({ activeUsers, realtimeStatus, user, onSignOut })
         {user && (
           <nav className={`navbar__nav ${menuOpen ? 'navbar__nav--open' : ''}`}>
             {navLinks.map(l => (
-              <a key={l.label} href={l.href} className="navbar__link" onClick={() => setMenuOpen(false)}>
+              <a 
+                key={l.label} 
+                href={l.href} 
+                className="navbar__link" 
+                onClick={(e) => { 
+                  setMenuOpen(false); 
+                  onLinkClick?.(e, l.href); 
+                }}
+              >
                 {l.label}
               </a>
             ))}
@@ -50,7 +58,13 @@ export default function Navbar({ activeUsers, realtimeStatus, user, onSignOut })
               </button>
             </>
           ) : (
-            <a href="#auth" className="btn btn--primary btn--sm">Masuk / Daftar</a>
+            <a 
+              href="#auth" 
+              className="btn btn--primary btn--sm" 
+              onClick={(e) => onLinkClick?.(e, '#auth')}
+            >
+              Masuk / Daftar
+            </a>
           )}
 
           {user && (

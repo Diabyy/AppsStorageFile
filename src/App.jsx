@@ -20,6 +20,7 @@ import './App.css'
 export default function App() {
   const [user, setUser] = useState(null)
   const [checkingSession, setCheckingSession] = useState(true)
+  const [transitioning, setTransitioning] = useState(false)
   const [files, setFiles] = useState([])
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -38,6 +39,27 @@ export default function App() {
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), 4000)
+  }
+
+  const handleLinkClick = (e, targetId) => {
+    if (!targetId || !targetId.startsWith('#')) return
+    e.preventDefault()
+    const elementId = targetId.substring(1)
+    
+    setTransitioning(true)
+    
+    // Lompat ke tujuan tepat saat layar ditutup oleh slide curtain (t=350ms)
+    setTimeout(() => {
+      const targetEl = document.getElementById(elementId)
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'auto', block: 'start' })
+      }
+    }, 350)
+    
+    // Matikan transisi setelah animasi wipe selesai (t=750ms)
+    setTimeout(() => {
+      setTransitioning(false)
+    }, 750)
   }
 
   const fetchFiles = async (userId = user?.id) => {
@@ -289,11 +311,11 @@ export default function App() {
         </div>
       )}
 
-      <Navbar activeUsers={activeUsers} realtimeStatus={realtimeStatus} user={user} onSignOut={handleSignOut} />
+      <Navbar activeUsers={activeUsers} realtimeStatus={realtimeStatus} user={user} onSignOut={handleSignOut} onLinkClick={handleLinkClick} />
       
       {!user ? (
         <>
-          <Hero user={user} />
+          <Hero user={user} onLinkClick={handleLinkClick} />
           <StatsBar />
           <FeaturesGrid />
           <div id="auth">
@@ -304,7 +326,7 @@ export default function App() {
         </>
       ) : (
         <>
-          <Hero user={user} />
+          <Hero user={user} onLinkClick={handleLinkClick} />
           <StatsBar />
           <ProblemSection />
           <FeaturesGrid />
@@ -340,6 +362,9 @@ export default function App() {
           <Footer />
         </>
       )}
+
+      {/* Slide Curtain Overlay */}
+      <div className={`slide-curtain ${transitioning ? 'slide-curtain--active' : ''}`} />
     </div>
   )
 }

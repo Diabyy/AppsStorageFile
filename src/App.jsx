@@ -19,6 +19,7 @@ import './App.css'
 
 export default function App() {
   const [user, setUser] = useState(null)
+  const [checkingSession, setCheckingSession] = useState(true)
   const [files, setFiles] = useState([])
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -48,6 +49,7 @@ export default function App() {
     }
 
     setLoadingFiles(true)
+    // Ambil list file di folder user
     const { data, error } = await supabase.storage.from(BUCKET_NAME).list(activeUid, {
       limit: 100,
       sortBy: { column: 'created_at', order: 'desc' },
@@ -55,16 +57,37 @@ export default function App() {
 
     if (error) {
       showNotification('Gagal memuat file: ' + error.message, 'error')
+      setLoadingFiles(false)
     } else {
-      const withUrls = (data || [])
-        .filter(f => f.name !== '.emptyFolderPlaceholder')
-        .map(file => {
-          const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(`${activeUid}/${file.name}`)
-          return { ...file, publicUrl: urlData.publicUrl }
+      const filteredFiles = (data || []).filter(f => f.name !== '.emptyFolderPlaceholder')
+      
+      if (filteredFiles.length === 0) {
+        setFiles([])
+        setLoadingFiles(false)
+        return
+      }
+
+      // Optimasi 1: Gunakan Signed URL karena RLS SELECT diaktifkan
+      // Kita buat batch signed URLs dengan masa kadaluarsa 1 jam (3600 detik)
+      const filePaths = filteredFiles.map(f => `${activeUid}/${f.name}`)
+      const { data: signedUrls, error: signedError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .createSignedUrls(filePaths, 3600)
+
+      if (signedError) {
+        showNotification('Gagal memproses link aman file: ' + signedError.message, 'error')
+        // Fallback ke file mentah tanpa link jika signedUrl gagal
+        setFiles(filteredFiles.map(f => ({ ...f, publicUrl: '' })))
+      } else {
+        // Gabungkan info file dengan signed URL-nya
+        const withUrls = filteredFiles.map((file, idx) => {
+          const matchedUrl = signedUrls[idx]?.signedUrl || ''
+          return { ...file, publicUrl: matchedUrl }
         })
-      setFiles(withUrls)
+        setFiles(withUrls)
+      }
+      setLoadingFiles(false)
     }
-    setLoadingFiles(false)
   }
 
   // 1. Cek User Session & Subscribe Realtime
@@ -75,6 +98,10 @@ export default function App() {
       if (user) {
         fetchFiles(user.id)
       }
+      // Selesai memeriksa session pertama kali
+      setCheckingSession(false)
+    }).catch(() => {
+      setCheckingSession(false)
     })
 
     // B. Auth Listener
@@ -86,6 +113,7 @@ export default function App() {
       } else {
         setFiles([])
       }
+      setCheckingSession(false)
     })
 
     // C. Realtime Channel Setup
@@ -143,13 +171,33 @@ export default function App() {
       return
     }
     if (!selectedFiles || selectedFiles.length === 0) return
-    const allowed = Array.from(selectedFiles).filter(f =>
-      ['image/jpeg', 'image/png', 'application/pdf'].includes(f.type)
-    )
+
+    // Optimasi 3: Validasi tipe file dan ukuran file (< 50MB) langsung di sisi klien
+    const allowed = []
+    const oversized = []
+
+    for (let f of Array.from(selectedFiles)) {
+      if (!['image/jpeg', 'image/png', 'application/pdf'].includes(f.type)) {
+        continue // Lewati format yang tidak didukung
+      }
+      if (f.size > 50 * 1024 * 1024) {
+        oversized.push(f.name)
+      } else {
+        allowed.push(f)
+      }
+    }
+
+    if (oversized.length > 0) {
+      showNotification(`File berikut terlalu besar (Maks 50MB): ${oversized.join(', ')}`, 'error')
+    }
+
     if (allowed.length === 0) {
-      showNotification('Hanya file JPG, PNG, atau PDF yang diizinkan.', 'error')
+      if (oversized.length === 0) {
+        showNotification('Hanya file JPG, PNG, atau PDF yang diizinkan.', 'error')
+      }
       return
     }
+
     setUploading(true)
     setUploadProgress(0)
     let successCount = 0
@@ -205,6 +253,19 @@ export default function App() {
       setUser(null)
       showNotification('Anda telah keluar.')
     }
+  }
+
+  // Optimasi 2: Layar Loading Premium saat memeriksa Sesi Supabase Auth
+  if (checkingSession) {
+    return (
+      <div className="splash-screen">
+        <div className="splash-screen__inner">
+          <div className="spinner-ring" />
+          <h3 className="splash-screen__title">Membuka FileVault...</h3>
+          <p className="splash-screen__desc">Menghubungkan ke layanan penyimpanan aman Supabase</p>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -1,4 +1,4 @@
-export default function Hero() {
+export default function Hero({ user }) {
   return (
     <section className="hero">
       <div className="hero__pattern" aria-hidden="true" />
@@ -12,7 +12,7 @@ export default function Hero() {
             Upload gambar JPG/PNG dan dokumen PDF ke cloud storage Supabase. Akses file kapan saja, dari mana saja, dengan aman dan terorganisir.
           </p>
           <div className="hero__cta-group">
-            <a href="#upload" className="btn btn--teal btn--lg">
+            <a href={user ? '#upload' : '#auth'} className="btn btn--teal btn--lg">
               Mulai Upload Sekarang →
             </a>
             <a href="#features" className="btn btn--ghost btn--lg">

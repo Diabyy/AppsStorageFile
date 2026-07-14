@@ -293,8 +293,9 @@ export default function App() {
       
       {!user ? (
         <>
-          <Hero />
+          <Hero user={user} />
           <StatsBar />
+          <FeaturesGrid />
           <div id="auth">
             <Auth onAuthSuccess={(u) => setUser(u)} />
           </div>
@@ -303,7 +304,7 @@ export default function App() {
         </>
       ) : (
         <>
-          <Hero />
+          <Hero user={user} />
           <StatsBar />
           <ProblemSection />
           <FeaturesGrid />

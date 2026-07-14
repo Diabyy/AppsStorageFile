@@ -1698,3 +1698,25 @@ button { font-family: var(--font); cursor: pointer; border: none; background: no
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ─────────────────────────────────────
+   TARGET HIGHLIGHT ANIMATION (Anchor scroll feedback)
+───────────────────────────────────── */
+:target {
+  animation: target-glow 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes target-glow {
+  0% {
+    box-shadow: 0 0 0 8px rgba(0, 127, 148, 0.4);
+    background-color: rgba(0, 127, 148, 0.08);
+  }
+  30% {
+    box-shadow: 0 0 0 16px rgba(0, 127, 148, 0);
+    background-color: rgba(0, 127, 148, 0.05);
+  }
+  100% {
+    box-shadow: none;
+    background-color: transparent;
+  }
+}
